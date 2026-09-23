@@ -4,13 +4,14 @@
 Ergänzt den Kontext-Wächter (`kontext_waechter.py`), der nur an Marken meldet —
 diese Zeile beantwortet stattdessen "wie stehe ich gerade", und zwar außerhalb
 des Gesprächs: Eine Statuszeile kostet kein einziges Token, ein Hinweis im
-Kontext dagegen schon.
+Kontext dagegen schon. Einrichtung in Claude Code: `settings.json`, Feld
+`statusLine` (`{"type": "command", "command": ".../statuszeile.py"}`).
 
 Gerechnet wird NICHT ein zweites Mal — Füllstand und Fenstergröße kommen aus
 `kontext_waechter.py`. Zwei Implementierungen derselben Zahl wären zwei Zahlen.
 
-Eingabe ist wie beim Wächter ein JSON-Objekt auf stdin; ausgegeben wird eine
-einzelne Zeile, ANSI-Farben erlaubt.
+Eingabe ist wie beim Wächter ein JSON-Objekt auf stdin, mit `transcript_path`
+und `session_id`; ausgegeben wird eine einzelne Zeile, ANSI-Farben erlaubt.
 """
 import json
 import os
@@ -34,11 +35,11 @@ def balken(pct, breite=10):
 
 
 def zeile(payload):
-    path = payload.get("log_path")
+    path = payload.get("transcript_path")
     if not path or not os.path.exists(path):
         return ""
 
-    used, model_id = kw.read_log(path)
+    used, model_id = kw.read_transcript(path)
     if not used:
         return ""
     if not model_id:

@@ -221,13 +221,18 @@ ist derselbe Prozentwert also viel früher gefährlich als bei einem großen.
 Werkzeugaufruf prüft (misst öfter, verpasst dadurch keinen Sprung), plus ein Zusatz für das
 Verdichtungs-Ereignis, wo es das gibt. Dazu ein Eintrag, der dem Agenten-Programm sagt, mit
 welchem Befehl es seine Statuszeile befüllen soll. Wie diese Ereignisse und diese Einstellung
-im eigenen Werkzeug heißen, steht in `../WERKZEUG-ABBILDUNG.md`.
+im eigenen Werkzeug heißen, steht in `../WERKZEUG-ABBILDUNG.md`. Bei Claude Code konkret: die
+Riegel hängen in `settings.json` unter `hooks` an `UserPromptSubmit`, `PostToolUse` und
+`PreCompact`, die Statuszeile am Feld `statusLine`.
 
 **Referenzfassung, gekürzt und lauffähig:** `../vorlagen/kontext_waechter.py` (der Riegel,
-meldet an Marken) und `../vorlagen/statuszeile.py` (der Dauerstand, rendert eine Zeile).
-Beide sind für ein Protokoll geschrieben, das JSON-Zeilen mit einer Nutzungsangabe schreibt
-und Ereignisse als JSON auf der Standardeingabe liefert — bei einem anderen Programm ändert
-sich das Format der Felder, nicht das Prinzip dahinter.
+meldet an Marken) und `../vorlagen/statuszeile.py` (der Dauerstand, rendert eine Zeile) — für
+Claude Code geschrieben und gegen ein echtes Transcript getestet. Beide lesen ein JSON-Objekt
+auf der Standardeingabe (u. a. `transcript_path`, `session_id`, `hook_event_name`) und werten
+das Transcript zeilenweise aus: `isSidechain` markiert Subagent-Zeilen, die letzte
+`assistant`-Zeile mit `message.usage` trägt den Füllstand, und die Modellkennung samt
+Fenster-Zusatz steht in der `attachment`-Zeile vom Typ `model`. Bei einem anderen Programm
+ändern sich diese Feldnamen, nicht das Prinzip dahinter.
 
 ---
 

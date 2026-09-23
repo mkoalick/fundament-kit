@@ -1,28 +1,37 @@
 #!/usr/bin/env python3
 """Kontext-Wächter: meldet an Marken, wie voll das Kontextfenster einer Sitzung ist.
 
-Gekürzte Referenzfassung für ein Agenten-Programm, das bei jedem Ereignis ein
-JSON-Objekt auf der Standardeingabe liefert und sein eigenes Protokoll als
-JSON-Zeilen schreibt, darunter eine Nutzungsangabe je Antwort. Bei einem anderen
-Programm ändern sich die Feldnamen — das Prinzip unten nicht:
+Referenzfassung für Claude Code — lauffähig gegen ein echtes Transcript
+(`~/.claude/projects/*/*.jsonl`), als Hook auf `UserPromptSubmit` und
+`PostToolUse` eingehängt (Einrichtung: `settings.json`, Feld `hooks`).
+Bei einem anderen Programm ändern sich die Feldnamen unten — das Prinzip nicht:
 
   1. Unteraufträge (eigene Sitzungen, Subagenten) haben ihr EIGENES Fenster —
      ein Lauf, der innerhalb eines solchen Unterauftrags feuert, überspringt sich.
+     Claude Code meldet das über `agent_id` im Hook-Payload; Subagent-Zeilen
+     innerhalb eines Transcripts selbst tragen zusätzlich `isSidechain: true`.
   2. Die Fenstergröße hängt an der GENAUEN Modellkennung, nicht am Anzeigenamen —
-     und diese Kennung steht oft nur am ANFANG des Protokolls, nicht am Ende.
+     und diese Kennung (samt Fenster-Zusatz wie `[1m]`) steht nur in der
+     `attachment`-Zeile vom Typ `model` (`attachment.identity.modelId`), meist am
+     ANFANG des Transcripts. `message.model` in den Assistant-Zeilen trägt nur
+     die Modellfamilie, nicht den Fenster-Zusatz.
   3. Nach einer Verdichtung FÄLLT der Füllstand — ohne Rücksetzen bliebe der
      Wächter danach für immer still, weil die höchste Marke schon gemeldet ist.
+     Claude Code meldet die bevorstehende Verdichtung selbst als eigenes Ereignis
+     (`hook_event_name: "PreCompact"`) — dort wird der Zähler zurückgesetzt.
 
 Fehler hier dürfen nie die eigentliche Arbeit blockieren: alles fällt auf `exit 0`.
-Anpassen: die Feldnamen im JSON, `BIG_WINDOW_MARKERS`, und wie `message()` ausgegeben
-wird (hier eine einzelne JSON-Zeile auf stdout).
+Anpassen: `BIG_WINDOW_MARKERS` an die eigenen Modellkennungen, und wie `message()`
+ausgegeben wird (hier das Hook-Antwortformat von Claude Code).
 """
 import json
 import os
 import sys
 import time
 
-STATE_DIR = os.path.expanduser("~/.agent-context-watch")
+STATE_DIR = os.environ.get("KONTEXT_WAECHTER_STATE_DIR") or os.path.expanduser(
+    "~/.agent-context-watch"
+)
 
 # Melde-Marken: 50 % und danach in Zehnerschritten, plus 95 % kurz vor der
 # automatischen Verdichtung der meisten Programme.
@@ -40,6 +49,7 @@ RESET_DROP = 15           # Einbruch um mehr als das gilt als Verdichtung/Neusta
 DEFAULT_WINDOW = 200_000  # Annahme bei unbekanntem Modell — im Zweifel klein
 BIG_WINDOW_MARKERS = {"1m": 1_000_000}  # an die eigenen Modellkennungen anpassen
 TAIL_BYTES = 400_000
+HEAD_BYTES = 2_000_000
 
 
 def levels_for(window):
@@ -62,49 +72,61 @@ def tail_lines(path, nbytes=TAIL_BYTES):
     return chunk.decode("utf-8", "replace").splitlines()
 
 
-def read_log(path):
-    """(belegte Tokens, Modellkennung) aus dem Protokoll — von hinten gelesen."""
+def read_transcript(path):
+    """(belegte Tokens, Modellkennung) aus dem Transcript — von hinten gelesen.
+
+    Belegt sind die Tokens der letzten Assistant-Zeile mit `usage`: Eingabe +
+    Cache-Treffer + Cache-Aufbau + Ausgabe des letzten API-Aufrufs — und genau
+    damit startet der nächste."""
     used = model_id = None
     for line in reversed(tail_lines(path)):
+        if used is not None and model_id is not None:
+            break
         if not line.startswith("{"):
             continue
         try:
             d = json.loads(line)
         except Exception:
             continue
-        if d.get("is_subagent"):
-            continue
-        if used is None:
-            u = d.get("usage") or {}
+        if d.get("isSidechain"):
+            continue  # Subagent-Zeile — eigenes Fenster, nicht das der Sitzung
+        if used is None and d.get("type") == "assistant":
+            u = (d.get("message") or {}).get("usage") or {}
             if u:
-                used = sum(u.get(k, 0) for k in
-                           ("input_tokens", "cache_read_tokens",
-                            "cache_write_tokens", "output_tokens"))
+                used = (
+                    (u.get("input_tokens") or 0)
+                    + (u.get("cache_read_input_tokens") or 0)
+                    + (u.get("cache_creation_input_tokens") or 0)
+                    + (u.get("output_tokens") or 0)
+                )
         if model_id is None:
-            model_id = d.get("model_id")
-        if used is not None and model_id is not None:
-            break
+            att = d.get("attachment") or {}
+            if att.get("type") == "model":
+                model_id = (att.get("identity") or {}).get("modelId")
     return used, model_id
 
 
-def scan_model_id(path, nbytes=2_000_000):
+def scan_model_id(path, nbytes=HEAD_BYTES):
     """Modellkennung am Kopf der Datei — ein späterer Wechsel landet am Ende und
-    wird von `read_log` erfasst; ein Blick in die Mitte einer großen Datei lohnt
-    nicht."""
+    wird von `read_transcript` erfasst; ein Blick in die Mitte einer großen Datei
+    lohnt nicht."""
     try:
         with open(path, encoding="utf-8", errors="replace") as fh:
             for line in fh:
                 nbytes -= len(line)
                 if nbytes < 0:
                     break
-                if not line.startswith("{"):
+                if '"modelId"' not in line:
                     continue
                 try:
                     d = json.loads(line)
                 except Exception:
                     continue
-                if d.get("model_id"):
-                    return d["model_id"]
+                att = d.get("attachment") or {}
+                if att.get("type") == "model":
+                    mid = (att.get("identity") or {}).get("modelId")
+                    if mid:
+                        return mid
     except Exception:
         pass
     return None
@@ -163,8 +185,9 @@ def message(level, pct, used, window):
 
 
 def on_reset_event(payload):
-    """Aufrufen, wenn das eigene Programm eine bevorstehende Verdichtung als
-    eigenes Ereignis meldet — der genauere Weg gegenüber der Abfall-Regel unten."""
+    """Bei `PreCompact` aufgerufen: Claude Code verdichtet gleich, der Zähler
+    fängt danach neu an — der genauere Weg gegenüber der Abfall-Regel in
+    main(), die den Einbruch erst aus den Zahlen erschließen müsste."""
     sp = state_path(payload.get("session_id"))
     state = load_state(sp)
     if state.get("level"):
@@ -177,14 +200,18 @@ def main():
     except Exception:
         return
 
-    if payload.get("is_subagent"):
-        return  # eigenes Fenster, nicht das der Hauptsitzung
+    if payload.get("hook_event_name") == "PreCompact":
+        on_reset_event(payload)
+        return
 
-    path = payload.get("log_path")
+    if payload.get("agent_id"):
+        return  # Subagent: eigenes Fenster, nicht das der Hauptsitzung
+
+    path = payload.get("transcript_path")
     if not path or not os.path.exists(path):
         return
 
-    used, model_id = read_log(path)
+    used, model_id = read_transcript(path)
     if not used:
         return
     if not model_id:
@@ -205,7 +232,14 @@ def main():
         return
 
     save_state(sp, reached, pct, model_id)
-    print(json.dumps({"message": message(reached, pct, used, window)}))
+    text = message(reached, pct, used, window)
+    print(json.dumps({
+        "systemMessage": text,
+        "hookSpecificOutput": {
+            "hookEventName": payload.get("hook_event_name") or "PostToolUse",
+            "additionalContext": "[kontext-waechter] " + text,
+        },
+    }))
 
 
 if __name__ == "__main__":
