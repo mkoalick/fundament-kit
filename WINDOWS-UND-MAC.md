@@ -108,6 +108,22 @@ function Start-AgentYolo {
 
 ---
 
+## 6 · Sitzungen einen Neustart überleben lassen
+
+| | macOS | Windows |
+|---|---|---|
+| **Regelmäßiger Schnappschuss** | `launchd`-Agent, alle paar Minuten | Aufgabenplanung mit einem Zeitintervall-Trigger |
+| **Fortsetzen beim Anmelden** | Login-Item bzw. `launchd` beim Einloggen | Aufgabenplanung, Trigger „Bei Anmeldung", oder der Autostart-Ordner |
+| **Geordnetes Beenden statt Killen** | Das Programm regulär beenden lassen (eigener Befehl oder Menüpunkt) — es sichert seine offenen Fenster dabei selbst | Kein einheitliches Gegenstück: Windows kennt keinen skriptbaren „regulär beenden"-Befehl für ein beliebiges Programm. Näherungsweise über die eigene Schließen-Funktion des Programms, nicht über ein hartes Beenden des Prozesses |
+
+> **Die Lücke, die bleibt:** Ein hartes Beenden verhindert unter jedem System, dass ein
+> Programm seine eigenen offenen Fenster für den nächsten Start merkt — das ist kein
+> macOS-Spezifikum. Unter Windows fehlt nur der einheitliche Befehl dafür; die
+> Fenster-Wiederherstellung des jeweiligen Programms selbst (sofern es sie anbietet) bleibt
+> davon unberührt.
+
+---
+
 ## Was das für die Erweiterungen heißt
 
 | Erweiterung | Windows |
@@ -117,7 +133,7 @@ function Start-AgentYolo {
 | 5 Spiegel | unverändert, außer dem Zeitplan |
 | 6 Dokumente | unverändert — die Bibliotheken laufen überall |
 | 7 Werkzeugbau · 8 Motoren | unverändert |
-| 9 Arbeitsplatz | die Registrier-Idee bleibt gleich; die Abkürzung „ohne Rückfragen" braucht eine PowerShell-Fassung (siehe oben), der Kontext-Wächter ist reines Python und läuft unverändert |
+| 9 Arbeitsplatz | die Registrier-Idee bleibt gleich; die Abkürzung „ohne Rückfragen" braucht eine PowerShell-Fassung (siehe oben), der Kontext-Wächter ist reines Python und läuft unverändert; für den Neustart-Schnappschuss siehe Abschnitt 6 |
 | 10 Web und Medien | unverändert |
 
 ---

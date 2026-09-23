@@ -234,6 +234,47 @@ das Transcript zeilenweise aus: `isSidechain` markiert Subagent-Zeilen, die letz
 Fenster-Zusatz steht in der `attachment`-Zeile vom Typ `model`. Bei einem anderen Programm
 ändern sich diese Feldnamen, nicht das Prinzip dahinter.
 
+### Sitzungen überleben den Neustart
+
+Ein Neustart oder ein automatisches Update reißt offene Fenster und laufende Sitzungen mit
+sich. Die Fenster kommen bei manchen Programmen von selbst zurück, die Terminals darin aber
+leer — und die Zuordnung „welche Sitzung lief in welchem Ordner" ist weg. Bei mehreren
+Sitzungen im selben Ordner reicht ein einfacher Fortsetzen-Befehl dafür nicht: Er würde von
+jedem Terminal aus dieselbe Sitzung greifen, statt sie unter den Terminals aufzuteilen.
+
+**Das Prinzip: regelmäßig festhalten, gezielt fortsetzen.** Ein Schnappschuss — alle paar
+Minuten, im Hintergrund — merkt sich, welche Sitzung in welchem Ordner läuft: pro Zeile
+Ordner, Sitzungskennung, Zeitpunkt. Ein Fortsetz-Befehl liest daraus für den *aktuellen*
+Ordner die nächste Sitzung, die noch nicht wieder aufgenommen wurde, und vergibt sie unter
+einer Sperre — sonst griffen mehrere gleichzeitig gestartete Terminals dieselbe Kennung. Ein
+zweiter Befehl macht das für alle Ordner auf einmal, etwa beim Anmelden.
+
+**Geordnetes Beenden gehört als Gegenstück dazu:** vor dem Schließen von Hand einen frischen
+Schnappschuss ziehen — der automatische ist immer ein paar Minuten alt, genau die Lücke, in
+der eine frisch gestartete Sitzung verloren ginge —, danach das Programm regulär beenden
+statt die Prozesse zu killen. Ein Kill verhindert, dass das Programm seine eigenen Fenster für
+den nächsten Start merkt.
+
+⚠️ **Die Falle: Der Schnappschuss darf nicht ausgerechnet *während* einer Wiederherstellung
+laufen.** Setzen die ersten Terminals gerade fort, während der nächste Lauf schon feuert,
+sichert er den Teilstand — und überschreibt damit die vollständige Liste von eben. Nötig
+dagegen: eine Sperre für die Dauer der Wiederherstellung und eine Kopie des vorherigen Stands
+vor jedem Überschreiben. Geht trotzdem etwas verloren, lässt es sich aus den eigenen
+Sitzungsprotokollen rekonstruieren, sofern die Sitzungen etwas Sichtbares hinterlassen haben —
+mit einem Zeitfenster als Filter, denn Kind- und Delegationssitzungen (siehe `03-delegation.md`)
+tragen an keinem Feld einen Unterschied zu einer normal beendeten Sitzung.
+
+**Eine Rückfrage lässt sich nicht abschalten, nur einmal beantworten:** Setzt man eine
+Sitzung fort, die lange ruhte und schon viel Verlauf hat, fragt mancher Agent, ob er mit der
+Zusammenfassung oder dem vollen Verlauf weitermachen soll. Dafür gibt es kein Flag und keine
+Einstellung — nur die entsprechende Option direkt im Dialog, meist sinngemäß „nicht mehr
+fragen", die dann dauerhaft für alle künftigen Sitzungen gilt.
+
+**Lohnt sich**, sobald mehrere Sitzungen regelmäßig über einen Neustart hinweg laufen — bei
+einer einzelnen Sitzung im Vordergrund reicht ein einfacher Fortsetzen-Befehl. **Brauchst du
+nicht**, wenn ohnehin nie mehr als eine Sitzung gleichzeitig läuft. **Später**, wenn ein
+erster Neustart schon einmal Sitzungen gekostet hat, die niemand mehr zuordnen konnte.
+
 ---
 
 ## Woran man merkt, dass es bricht

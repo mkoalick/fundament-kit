@@ -10,7 +10,9 @@
 einen Riegel-Beispiel für Vollzugriff ohne Berechtigungsabfragen (samt der venv-Falle durch
 verzögerte Editor-Aktivierung) und eine ausgearbeitete Kontextanzeige — Statuszeile als
 Dauerstand, Wächter als Marken-Meldung, mit gekürzten lauffähigen Referenzfassungen unter
-`vorlagen/`.
+`vorlagen/`. Dazu, nachträglich ergänzt: Erweiterung 9 um „Sitzungen überleben den
+Neustart" (Schnappschuss, gezieltes Fortsetzen, geordnetes Beenden, samt
+Windows-Gegenstück).
 
 **v1.0 — 2026-09-14** · Erste Fassung. Vier Kernweichen, zehn Erweiterungen, zwei Eingänge
 (Neuaufbau und Durchlauf für Bestehendes), 13 wiederkehrende Fehlermuster.
