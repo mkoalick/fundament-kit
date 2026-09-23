@@ -85,6 +85,30 @@ Dazu zwei Beobachtungen, die man kennen sollte:
   verschiedene, beide plausible Lösungen — und an der Nahtstelle fällt das später nicht
   mehr auf.
 
+### Jeder Subagent zahlt den vollen Startpreis neu
+
+Ein Subagent bekommt nicht nur die eigentliche Teilaufgabe. Er lädt beim Start dieselben
+Regeln, dieselbe Anweisungsdatei und dasselbe Gedächtnis wie die Hauptsitzung — ohne dass
+sich Geschwister-Agenten davon irgendetwas teilen. **Gemessen: rund 77.000 bis 98.000 Token
+je Subagent**, fast so viel wie eine ganze Hauptsitzung, allein für den Start.
+
+**Also: erst schneiden, dann zählen.** Die Aufgabe wird zuerst in Pakete zerlegt, die sich
+nicht überschneiden; die Zahl der Agenten folgt daraus und ist kein Ziel für sich. Nicht
+feiner teilen als nötig — zwei Pakete, die dieselbe Datei lesen oder logisch aufeinander
+aufbauen, sind ein Paket. Drei gut geschnittene Agenten schlagen zehn schlecht geschnittene.
+
+**Wofür sich der Preis trotzdem lohnt:** Rohmaterial draußen halten, das sonst im Fenster
+der Hauptsitzung landet und bei jedem weiteren Schritt erneut mitgelesen wird — Suchtreffer,
+Dateiinhalte, Werkzeugausgaben. Gemessen an einem realen Lauf: Zehn Subagenten hielten
+832.000 Zeichen Werkzeugausgabe draußen und lieferten 46.000 zurück, ein Verhältnis von 18:1.
+Das gilt auch für reine Lesearbeit: Liegt die Antwort über viele Dateien verstreut, geht die
+Suche an einen Subagenten — nicht weil sie dadurch schneller wäre, sondern weil seine
+Werkzeugausgabe draußen bleibt.
+
+**Das Modell ist dabei ein eigener Hebel:** Ohne ausdrückliche Angabe erbt jeder Subagent
+das Modell der Hauptsitzung, meist das teuerste, auch für reine Faktenarbeit. Wie das Modell
+je Aufgabenart oder Phase gesetzt wird, steht in `08-mehrere-motoren.md`.
+
 ### Nie im Hintergrund
 
 Eine abgegebene Sitzung gehört **nicht** in einen Hintergrundlauf der aufrufenden Sitzung.

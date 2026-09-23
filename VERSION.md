@@ -12,7 +12,8 @@ verzögerte Editor-Aktivierung) und eine ausgearbeitete Kontextanzeige — Statu
 Dauerstand, Wächter als Marken-Meldung, mit gekürzten lauffähigen Referenzfassungen unter
 `vorlagen/`. Dazu, nachträglich ergänzt: Erweiterung 9 um „Sitzungen überleben den
 Neustart" (Schnappschuss, gezieltes Fortsetzen, geordnetes Beenden, samt
-Windows-Gegenstück).
+Windows-Gegenstück) und Erweiterung 3 (Delegation) um die Kostenseite paralleler Arbeit —
+der volle Startpreis je Subagent und wofür er sich trotzdem lohnt.
 
 **v1.0 — 2026-09-14** · Erste Fassung. Vier Kernweichen, zehn Erweiterungen, zwei Eingänge
 (Neuaufbau und Durchlauf für Bestehendes), 13 wiederkehrende Fehlermuster.
