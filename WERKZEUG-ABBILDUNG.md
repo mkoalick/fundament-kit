@@ -26,6 +26,8 @@ Formen dahinter nicht.*
 | **Gemeinsame Ebene einhängen** | Eine Verknüpfung im Projektordner, oder ein Pfad, den die Projektregel nennt |
 | **Abgegebene Sitzung** | Das Kommandozeilenprogramm des Agenten im nicht-interaktiven Modus, mit dem Zielverzeichnis als Arbeitsverzeichnis |
 | **Rückstand als Aufgaben** | Textdateien mit Kopfangaben. Ein Projektwerkzeug taugt auch — dann ist es die Wahrheit, und das gehört in Weiche 3 |
+| **Vollzugriffsmodus** | Ein Start-Flag oder eine Einstellung des Agenten-Programms, die jede Berechtigungsabfrage abschaltet (z. B. `--dangerously-skip-permissions`, `bypassPermissions`) — kein Riegel für sich, sondern das, wogegen der eigene Geländer-Riegel antritt |
+| **Statuszeile** | Eine vom Agenten-Programm gerenderte Kopf- oder Fußzeile im Terminal, falls vorhanden — sonst ein selbstgebauter Prompt-Zusatz, der außerhalb des Gesprächs rendert und deshalb nichts kostet |
 
 ---
 

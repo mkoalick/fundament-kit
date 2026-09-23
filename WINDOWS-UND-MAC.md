@@ -79,6 +79,35 @@ als vom Betriebssystem — siehe `WERKZEUG-ABBILDUNG.md`. Was plattformabhängig
 
 ---
 
+## 5 · Einen Agenten ohne Berechtigungsabfragen starten
+
+| | macOS / Linux | Windows |
+|---|---|---|
+| **Abkürzung mit Geländer** | Shell-Funktion, siehe `10-erweiterungen/09-arbeitsplatz.md` | PowerShell-Funktion, gleiches Geländer |
+| **Prüfen, ob interaktiv** | `[[ -o interactive ]]` | `[Environment]::UserInteractive` — meldet nicht exakt dasselbe, taugt aber als Näherung |
+| **Umgebung vor dem Start aktivieren** | `source .venv/bin/activate` | `.venv\Scripts\Activate.ps1` |
+
+```powershell
+function Start-AgentYolo {
+    $safe = Join-Path $HOME "<projekt-wurzel>"   # anpassen
+    $here = (Get-Location).Path
+    if ($here -ne $safe -and -not $here.StartsWith("$safe\")) {
+        Write-Warning "Startet OHNE Berechtigungsabfragen."
+        Write-Warning "Arbeitsverzeichnis: $here - liegt ausserhalb von $safe."
+        if ((Read-Host "Trotzdem starten? [y/N]") -ne "y") { return }
+    }
+    $activate = Join-Path $PWD ".venv\Scripts\Activate.ps1"
+    if (Test-Path $activate) { & $activate }
+    claude --dangerously-skip-permissions @args
+}
+```
+
+> Dieselbe Lehre wie im Modul: Ein Editor, der seine Aktivierungszeile verzögert ins
+> Terminal schickt, trifft unter Windows dieselbe Falle — die Umgebung deshalb auch hier
+> **vor** dem Start und **in derselben Funktion** aktivieren, nicht dem Editor überlassen.
+
+---
+
 ## Was das für die Erweiterungen heißt
 
 | Erweiterung | Windows |
@@ -88,7 +117,7 @@ als vom Betriebssystem — siehe `WERKZEUG-ABBILDUNG.md`. Was plattformabhängig
 | 5 Spiegel | unverändert, außer dem Zeitplan |
 | 6 Dokumente | unverändert — die Bibliotheken laufen überall |
 | 7 Werkzeugbau · 8 Motoren | unverändert |
-| 9 Arbeitsplatz | vollständig anders. Die einzige übertragbare Idee ist die **Liste selbst** |
+| 9 Arbeitsplatz | die Registrier-Idee bleibt gleich; die Abkürzung „ohne Rückfragen" braucht eine PowerShell-Fassung (siehe oben), der Kontext-Wächter ist reines Python und läuft unverändert |
 | 10 Web und Medien | unverändert |
 
 ---
