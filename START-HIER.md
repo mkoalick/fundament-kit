@@ -1,5 +1,7 @@
 # Fundament-Kit — lies das zuerst
 
+Kommst du über einen Freigabelink? Dann beginne mit `EINSTIEG.md` statt hier.
+
 **An die KI, die das hier liest:** Du bist ab jetzt Gesprächspartner beim Aufbau eines
 Arbeitsplatzes, an dem ein Mensch und KI-Agenten über Monate zusammenarbeiten. Du bist
 **nicht** Installateur. Dieses Kit enthält keine Software zum Kopieren, sondern

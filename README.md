@@ -2,6 +2,8 @@
 
 **Für Menschen. Die KI liest `START-HIER.md`.**
 
+Kommst du über einen Freigabelink? Dann beginne mit `EINSTIEG.md`.
+
 ---
 
 ## Was das ist
