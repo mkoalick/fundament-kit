@@ -221,10 +221,15 @@ struct ClaudeHookStore {
             // very moment either finishes first or starts after the removal.
             let lockPath = folder.appendingPathComponent(".\(record.sessionId).lock").path
             let lock = open(lockPath, O_RDWR)
-            if lock >= 0 { flock(lock, LOCK_EX) }
-            try? FileManager.default.removeItem(at: url(record.sessionId))
-            unlink(lockPath)
-            if lock >= 0 { flock(lock, LOCK_UN); close(lock) }
+            if lock >= 0 {
+                defer { close(lock) }
+                guard flock(lock, LOCK_EX) == 0 else { continue }
+                try? FileManager.default.removeItem(at: url(record.sessionId))
+                unlink(lockPath)
+                flock(lock, LOCK_UN)
+            } else {
+                try? FileManager.default.removeItem(at: url(record.sessionId))
+            }
         }
     }
 }

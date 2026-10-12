@@ -148,7 +148,8 @@ final class ClaudeTranscriptReader {
             lastModel = model
             break
         }
-        for line in lines.reversed() {
+        let timestampMarker = Data("\"timestamp\"".utf8)
+        for line in lines.reversed() where has(line, timestampMarker) {
             if let raw = jsonObject(line)?["timestamp"] as? String, let when = parseDate(raw) { lastActivity = when; break }
         }
 
