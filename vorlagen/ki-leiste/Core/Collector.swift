@@ -24,7 +24,7 @@ final class SessionCollector {
     let paths: AppPaths
     var providers: [SessionProvider]
     private var previous: [String: SessionRecord] = [:]
-    private var lastRegister: Data?
+    private var lastRegister: [SessionRecord]?
     private var lastRegisterWrite = Date.distantPast
     private var lastCleanup = Date.distantPast
     var writesRegister = true
@@ -148,14 +148,12 @@ final class SessionCollector {
     // The register is written when something changed and at least every 30 s,
     // so a reader can tell a running app from a stopped one.
     private func writeRegister(_ local: [SessionRecord], now: Date) {
-        let encoder = SessionRegister.encoder()
-        guard let body = try? encoder.encode(local) else { return }
-        guard body != lastRegister || now.timeIntervalSince(lastRegisterWrite) >= 30 else { return }
+        guard local != lastRegister || now.timeIntervalSince(lastRegisterWrite) >= 30 else { return }
         let register = SessionRegister(source: nil, generatedAt: now, sessions: local)
-        guard let data = try? encoder.encode(register) else { return }
+        guard let data = try? SessionRegister.encoder().encode(register) else { return }
         do {
             try writePrivately(data, to: paths.register)
-            lastRegister = body
+            lastRegister = local
             lastRegisterWrite = now
         } catch {}
     }

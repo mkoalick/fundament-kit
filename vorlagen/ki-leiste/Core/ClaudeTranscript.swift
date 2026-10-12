@@ -37,18 +37,30 @@ final class ClaudeTranscriptReader {
     }
 
     private var cache: [String: Cached] = [:]
+    private var readAt: [String: Date] = [:]
     private let tailLimit = 1_000_000
+    // A busy transcript changes many times a minute; titles and models do not.
+    // With an interval, a changed file is parsed again only after this long.
+    var minimumInterval: TimeInterval = 0
 
     init() {}
+
+    // Forget transcripts of sessions that are gone, so the cache cannot grow forever.
+    func retain(_ paths: Set<String>) {
+        cache = cache.filter { paths.contains($0.key) }
+        readAt = readAt.filter { paths.contains($0.key) }
+    }
 
     func summary(path: String) -> ClaudeTranscriptSummary {
         guard let stamp = FileStamp(path) else {
             cache.removeValue(forKey: path)
             return ClaudeTranscriptSummary()
         }
-        if let cached = cache[path], cached.stamp == stamp {
-            return cached.summary
+        if let cached = cache[path] {
+            if cached.stamp == stamp { return cached.summary }
+            if let last = readAt[path], Date().timeIntervalSince(last) < minimumInterval { return cached.summary }
         }
+        readAt[path] = Date()
         var summary = parse(path: path)
         // A tail that no longer reaches back to the title event keeps the
         // title this reader already found for this path.
@@ -69,10 +81,17 @@ final class ClaudeTranscriptReader {
         var pendingByID: [String: PendingQuestion] = [:]
         var pendingOrder: [String] = []
 
-        for line in tailLines(path, limit: tailLimit) {
+        // Decoding every line of a megabyte of JSON is what makes this expensive;
+        // only lines that can carry a title, a question, or a report are decoded.
+        let lines = tailLines(path, limit: tailLimit)
+        func has(_ line: Data, _ marker: Data) -> Bool { line.range(of: marker) != nil }
+        let titleMarker = Data("-title\"".utf8), askMarker = Data("AskUserQuestion".utf8)
+        let resultMarker = Data("tool_result".utf8), reportMarker = Data("SESSION_REPORT".utf8)
+        let asks = lines.contains { has($0, askMarker) }
+        for line in lines where has(line, titleMarker) || has(line, reportMarker)
+                || (asks && (has(line, askMarker) || has(line, resultMarker))) {
             guard let event = jsonObject(line) else { continue }
             let when = (event["timestamp"] as? String).flatMap(parseDate)
-            if let when = when { lastActivity = when }
 
             if let type = event["type"] as? String {
                 if type == "custom-title" {
@@ -98,10 +117,6 @@ final class ClaudeTranscriptReader {
                 blocks = [["type": "text", "text": text]]
             }
 
-            if role == "assistant", let model = message["model"] as? String, !model.hasPrefix("<") {
-                lastModel = model
-            }
-
             for block in blocks {
                 guard let blockType = block["type"] as? String else { continue }
                 switch blockType {
@@ -123,6 +138,18 @@ final class ClaudeTranscriptReader {
                     break
                 }
             }
+        }
+
+        // The model and the last activity come from the end of the file.
+        let modelMarker = Data("\"model\"".utf8)
+        for line in lines.reversed() where has(line, modelMarker) {
+            guard let message = jsonObject(line)?["message"] as? [String: Any], message["role"] as? String == "assistant",
+                  let model = message["model"] as? String, !model.hasPrefix("<") else { continue }
+            lastModel = model
+            break
+        }
+        for line in lines.reversed() {
+            if let raw = jsonObject(line)?["timestamp"] as? String, let when = parseDate(raw) { lastActivity = when; break }
         }
 
         summary.title = !customTitle.isEmpty ? customTitle : aiTitle

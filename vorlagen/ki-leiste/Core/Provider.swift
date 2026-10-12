@@ -26,7 +26,7 @@ struct AppPaths {
         }
     }
 
-    static var bundleIdentifier: String { Bundle.main.bundleIdentifier ?? "dev.agentstrip.cli" }
+    static var bundleIdentifier: String { Bundle.main.bundleIdentifier ?? "ki-leiste-dev" }
 
     var settings: URL { base.appendingPathComponent("settings.json") }
     var register: URL { base.appendingPathComponent("sessions.json") }        // written by the app for other tools
@@ -66,11 +66,12 @@ struct FileStamp: Equatable {
     let modified: Date
     let size: UInt64
 
+    // stat(2) directly: FileManager's attribute dictionary costs far more, and
+    // this runs for every watched file in every round.
     init?(_ path: String) {
-        guard let attributes = try? FileManager.default.attributesOfItem(atPath: path),
-              let modified = attributes[.modificationDate] as? Date,
-              let size = attributes[.size] as? NSNumber else { return nil }
-        self.modified = modified
-        self.size = size.uint64Value
+        var info = stat()
+        guard stat(path, &info) == 0 else { return nil }
+        modified = Date(timeIntervalSince1970: TimeInterval(info.st_mtimespec.tv_sec) + TimeInterval(info.st_mtimespec.tv_nsec) / 1_000_000_000)
+        size = UInt64(info.st_size)
     }
 }

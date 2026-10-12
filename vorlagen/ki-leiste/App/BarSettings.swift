@@ -91,8 +91,10 @@ struct BarSettings: Codable, Equatable {
         // of the first versions name the states in German.
         let legacy = ["input": "waiting", "arbeitet": "working", "fertig": "done", "blockiert": "blocked", "unbekannt": "unknown"]
         let stored = value(.statusColors, [String: String]())
-        let renamed = Dictionary(stored.map { (legacy[$0.key] ?? $0.key, $0.value) }, uniquingKeysWith: { first, _ in first })
-        statusColors = base.statusColors.merging(renamed.filter { base.statusColors[$0.key] != nil }) { _, custom in custom }
+        // Current keys win over old ones that mean the same state.
+        var renamed = stored.filter { base.statusColors[$0.key] != nil }
+        for (old, new) in legacy where renamed[new] == nil { renamed[new] = stored[old] }
+        statusColors = base.statusColors.merging(renamed) { _, custom in custom }
         repos = value(.repos, base.repos)
         nativeNotifications = value(.nativeNotifications, base.nativeNotifications)
         popupHints = value(.popupHints, base.popupHints)

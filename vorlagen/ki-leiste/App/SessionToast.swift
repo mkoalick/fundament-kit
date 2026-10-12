@@ -143,7 +143,6 @@ final class SessionToast {
             self.panel.orderOut(nil)
             self.current = nil
             self.onVisibilityChanged?(false)
-            print("Toast: 3-second hint ended after \(String(format: "%.2f", ProcessInfo.processInfo.systemUptime - self.startedAt)) s")
             fflush(stdout)
             self.showNext()
         }

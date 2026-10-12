@@ -47,6 +47,8 @@ class Companion: NSObject, NSApplicationDelegate, NSMenuDelegate {
     var watcher: FileWatcher?
     var pendingChanges = Set<String>()
     var collectScheduled = false
+    var lastCollect = Date.distantPast
+    var lastRepoClear = Date.distantPast
     var providerSignature = ""
     var snapshot = CollectorSnapshot(local: [], external: [], generatedAt: .distantPast)
     var hookState: ClaudeHookInstaller.State = .notInstalled
@@ -147,12 +149,14 @@ class Companion: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    // Runs on the collector queue: coalesces bursts of file events into one round.
+    // Runs on the collector queue: coalesces bursts of file events into one round,
+    // and at most one round per second (every tool call of every session is an event).
     func noteChanges(_ changed: Set<String>) {
         pendingChanges.formUnion(changed)
         guard !collectScheduled else { return }
         collectScheduled = true
-        collectorQueue.asyncAfter(deadline: .now() + 0.25) { [weak self] in self?.collectNow() }
+        let wait = max(0.25, 1 - Date().timeIntervalSince(lastCollect))
+        collectorQueue.asyncAfter(deadline: .now() + wait) { [weak self] in self?.collectNow() }
     }
 
     func scheduleCollect(after delay: TimeInterval) {
@@ -164,18 +168,33 @@ class Companion: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func collectNow() {
+        lastCollect = Date()
         let changed = pendingChanges
         pendingChanges.removeAll()
         collectScheduled = false
-        repos.clear() // a color changed in VS Code shows up in the next round
+        // A color changed in VS Code shows up within a minute; resolving every
+        // folder in every round would cost more than it brings.
+        if Date().timeIntervalSince(lastRepoClear) > 60 { repos.clear(); lastRepoClear = Date() }
         let next = collector.collect(now: Date(), changed: changed)
-        let state = (try? ClaudeHookInstaller(helperPath: AppIdentity.helperURL.path).state(of: try? Data(contentsOf: paths.claudeSettings))) ?? .notInstalled
+        let state = currentHookState()
         DispatchQueue.main.async { [weak self] in
             self?.snapshot = next
             self?.hookState = state
             self?.settingsWindow?.model.hookState = state
             self?.refresh()
         }
+    }
+
+    // settings.json is only parsed again when it changed (collector queue only).
+    private var hookStateStamp: FileStamp?
+    private var cachedHookState: ClaudeHookInstaller.State = .notInstalled
+    private func currentHookState() -> ClaudeHookInstaller.State {
+        let stamp = FileStamp(paths.claudeSettings.resolvingSymlinksInPath().path)
+        guard stamp == nil || stamp != hookStateStamp else { return cachedHookState }
+        hookStateStamp = stamp
+        cachedHookState = (try? ClaudeHookInstaller(helperPath: AppIdentity.helperURL.path)
+            .state(of: try? Data(contentsOf: paths.claudeSettings))) ?? .notInstalled
+        return cachedHookState
     }
 
     func applySettings() {
@@ -219,7 +238,7 @@ class Companion: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         updateBar(sessions: models.filter { !settings.isHidden($0.repo) }, disconnected: false)
         let counts = stateCounts(models)
-        item.button?.toolTip = String(format: L("Waiting: %d · Working: %d · Done: %d"), counts.input, counts.working, counts.done)
+        item.button?.toolTip = String(format: L("Waiting: %ld · Working: %ld · Done: %ld"), counts.input, counts.working, counts.done)
         if !pendingToastEvents.isEmpty {
             let events = pendingToastEvents
             pendingToastEvents.removeAll()
@@ -256,7 +275,7 @@ class Companion: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(withTitle: String(format: L("Updated %@"), time), action: nil, keyEquivalent: "")
         if staleSources { menu.addItem(withTitle: L("An external source has not reported for a while"), action: nil, keyEquivalent: "") }
         let total = stateCounts(models)
-        menu.addItem(withTitle: String(format: L("Waiting: %d · Working: %d · Done: %d"), total.input, total.working, total.done), action: nil, keyEquivalent: "")
+        menu.addItem(withTitle: String(format: L("Waiting: %ld · Working: %ld · Done: %ld"), total.input, total.working, total.done), action: nil, keyEquivalent: "")
         if settings.watchClaude, hookState != .installed {
             let setup = menu.addItem(withTitle: hookState == .outdated ? L("Update Claude Code hooks …") : L("Set up Claude Code hooks …"),
                                      action: #selector(openSourceSettings), keyEquivalent: "")
@@ -287,7 +306,7 @@ class Companion: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 let details = NSMenu()
                 for (field, text) in [("id", session.id), (L("model"), session.modelLabel), (L("task"), session.task),
                                       (L("question"), session.questionOrHint), (L("result"), session.result),
-                                      (L("source"), session.origin ?? ""), (L("process"), session.process)] where !text.isEmpty {
+                                      (L("source"), session.origin ?? ""), (L("process"), session.process == "open" ? L("running") : L("ended"))] where !text.isEmpty {
                     details.addItem(withTitle: "\(field): \(String(text.prefix(180)))", action: nil, keyEquivalent: "")
                 }
                 entry.submenu = details

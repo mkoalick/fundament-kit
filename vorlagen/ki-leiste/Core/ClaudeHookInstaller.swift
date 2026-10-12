@@ -68,8 +68,15 @@ struct ClaudeHookInstaller {
         let root: JSONSpan
         do { root = try JSONSpanParser.parse(bytes) } catch { throw Failure.invalidJSON("\(error)") }
         guard root.kind == .object else { throw Failure.unexpectedShape("the top level is not an object") }
+        // A key twice: every JSON reader keeps the last one, this one would edit the
+        // first. Refuse instead of writing entries that would never take effect.
+        if root.members.filter({ $0.key == "hooks" }).count > 1 {
+            throw Failure.unexpectedShape("\"hooks\" appears more than once")
+        }
         let hooks = root.member("hooks")
         if let hooks = hooks {
+            let events = hooks.members.map { $0.key }
+            if Set(events).count != events.count { throw Failure.unexpectedShape("an event appears more than once in \"hooks\"") }
             guard hooks.kind == .object else { throw Failure.unexpectedShape("\"hooks\" is not an object") }
             for member in hooks.members where member.value.kind != .array {
                 throw Failure.unexpectedShape("\"hooks.\(member.key)\" is not a list")
@@ -78,13 +85,20 @@ struct ClaudeHookInstaller {
         return Parsed(bytes: bytes, root: root, hooks: hooks)
     }
 
-    // A matcher group is ours when every command handler in it carries the marker.
+    // A matcher group is ours when every command handler in it has exactly the
+    // shape this installer writes (any helper path), not merely the marker word.
     private func isOurs(_ group: JSONSpan) -> Bool {
         guard group.kind == .object, let handlers = group.member("hooks"), handlers.kind == .array,
               !handlers.elements.isEmpty else { return false }
         return handlers.elements.allSatisfy { handler in
-            handler.member("command")?.string?.contains("# \(marker)") == true
+            guard let command = handler.member("command")?.string else { return false }
+            return ClaudeHookInstaller.isOwnCommand(command, marker: marker)
         }
+    }
+
+    static func isOwnCommand(_ command: String, marker: String) -> Bool {
+        command.hasPrefix("[ -x '") && command.hasSuffix(" claude-hook; true # \(marker)")
+            && command.contains("' ] && '")
     }
 
     private func isCurrent(_ group: JSONSpan, for hook: Hook) -> Bool {
@@ -300,7 +314,9 @@ struct ClaudeHookInstaller {
             for (event, value) in hooks {
                 let groups = (value as? [Any] ?? []).filter { group in
                     let handlers = (group as? [String: Any])?["hooks"] as? [Any] ?? []
-                    return handlers.isEmpty || !handlers.allSatisfy { (($0 as? [String: Any])?["command"] as? String)?.contains("# \(marker)") == true }
+                    return handlers.isEmpty || !handlers.allSatisfy { handler in
+                        ((handler as? [String: Any])?["command"] as? String).map { ClaudeHookInstaller.isOwnCommand($0, marker: marker) } == true
+                    }
                 }
                 if !groups.isEmpty { kept[event] = groups }
             }
@@ -341,8 +357,20 @@ struct ClaudeHookInstaller {
         }
     }
 
+    // Follows a chain of symlinks to the file that is really written, also when
+    // that file does not exist yet (resolvingSymlinksInPath gives up then).
+    static func realTarget(of url: URL) -> URL {
+        var current = url.standardizedFileURL
+        for _ in 0..<16 {
+            guard let destination = try? FileManager.default.destinationOfSymbolicLink(atPath: current.path) else { return current }
+            current = (destination.hasPrefix("/") ? URL(fileURLWithPath: destination)
+                       : current.deletingLastPathComponent().appendingPathComponent(destination)).standardizedFileURL
+        }
+        return current
+    }
+
     private func rewrite(_ url: URL, backups: URL, _ change: (Data?) throws -> Data?) throws -> Outcome {
-        let target = url.resolvingSymlinksInPath()
+        let target = ClaudeHookInstaller.realTarget(of: url)
         for _ in 0..<3 {
             let before = try? Data(contentsOf: target)
             guard let next = try change(before), next != before else { return Outcome(changed: false, backup: nil) }

@@ -177,6 +177,7 @@ claudeFallbackTests()
 codexProviderTests()
 collectorTests()
 menuToggleTests()
+reviewFixTests()
 print("Window layout: \(layoutChecks) checks, collector and providers: \(checks - layoutChecks) checks passed")
 
 // Native integration: only the fixture's CG windows are supplied. No user

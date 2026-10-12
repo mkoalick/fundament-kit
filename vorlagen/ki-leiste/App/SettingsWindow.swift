@@ -77,6 +77,12 @@ final class SettingsModel: ObservableObject {
             })
     }
 
+    // Kept as short as the settings file allows, also while typing.
+    var menuBarLabel: Binding<String> {
+        Binding(get: { self.settings.menuBarLabel },
+                set: { self.settings.menuBarLabel = String($0.prefix(6)) })
+    }
+
     func visible(_ repo: String) -> Binding<Bool> {
         Binding(
             get: { !(self.settings.repos[repo]?.hidden ?? false) },
@@ -116,7 +122,7 @@ struct SettingsView: View {
                 Stepper("Font size: \(Int(model.settings.fontSize)) pt", value: $model.settings.fontSize, in: 10...13, step: 1)
                 Toggle("Show model badge (C Claude, G Codex, M MiniMax)", isOn: $model.settings.showModelBadge)
                 Toggle("Pulse sessions that are waiting", isOn: $model.settings.pulseInput)
-                TextField("Menu bar label", text: $model.settings.menuBarLabel, prompt: Text("Icon"))
+                TextField("Menu bar label", text: model.menuBarLabel, prompt: Text("Icon"))
             }
             Section("Strip") {
                 Picker("At most", selection: $model.settings.maxRows) {

@@ -167,7 +167,9 @@ enum ClaudeHookFold {
         default:
             changesState = false
         }
-        if name != "SessionEnd", name != "SessionStart" { record.endedAt = nil }
+        // Only a real event reopens an ended session (resume in the same process);
+        // an unknown notification arriving late must not.
+        if changesState, name != "SessionEnd", name != "SessionStart" { record.endedAt = nil }
         if changesState {
             record.lastEvent = name
             record.lastEventAt = now
@@ -215,8 +217,14 @@ struct ClaudeHookStore {
     // Records of sessions that ended (or whose process vanished) a day ago go.
     func removeExpired(now: Date, olderThan age: TimeInterval = 24 * 3600, isAlive: (ClaudeHookRecord) -> Bool) {
         for record in all() where now.timeIntervalSince(record.lastEventAt) > age && (record.endedAt != nil || !isAlive(record)) {
+            // Hold the session's lock while removing, so a hook writing at this
+            // very moment either finishes first or starts after the removal.
+            let lockPath = folder.appendingPathComponent(".\(record.sessionId).lock").path
+            let lock = open(lockPath, O_RDWR)
+            if lock >= 0 { flock(lock, LOCK_EX) }
             try? FileManager.default.removeItem(at: url(record.sessionId))
-            try? FileManager.default.removeItem(at: folder.appendingPathComponent(".\(record.sessionId).lock"))
+            unlink(lockPath)
+            if lock >= 0 { flock(lock, LOCK_UN); close(lock) }
         }
     }
 }

@@ -10,13 +10,29 @@ final class ClaudeRegistryReader {
     private let repos: RepoResolver
     private let transcripts: ClaudeTranscriptReader
     private let isAlive: (Int32) -> Bool
+    private let processStart: (Int32) -> Date?
 
     init(paths: AppPaths, repos: RepoResolver, transcripts: ClaudeTranscriptReader,
-         isAlive: @escaping (Int32) -> Bool = { ProcessInspector.isAlive($0) }) {
+         isAlive: @escaping (Int32) -> Bool = { ProcessInspector.isAlive($0) },
+         processStart: @escaping (Int32) -> Date? = { ProcessInspector.info($0)?.startedAt }) {
         self.paths = paths
         self.repos = repos
         self.transcripts = transcripts
         self.isAlive = isAlive
+        self.processStart = processStart
+    }
+
+    // "procStart" is the process start as `ps -o lstart` prints it, in local time.
+    private static let lstartFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "EEE MMM d HH:mm:ss yyyy"
+        return formatter
+    }()
+
+    static func parseProcStart(_ raw: String) -> Date? {
+        let compact = raw.split(separator: " ", omittingEmptySubsequences: true).joined(separator: " ")
+        return lstartFormatter.date(from: compact)
     }
 
     func sessions(now: Date) -> [SessionRecord] {
@@ -35,7 +51,12 @@ final class ClaudeRegistryReader {
 
     private func record(from object: [String: Any]) -> SessionRecord? {
         guard let pid = (object["pid"] as? NSNumber)?.int32Value, pid > 0, isAlive(pid) else { return nil }
-        guard let nativeId = object["sessionId"] as? String, !nativeId.isEmpty else { return nil }
+        // A file left behind by a crashed session must not come back to life when
+        // the system hands its pid to another process later.
+        if let raw = object["procStart"] as? String, let expected = ClaudeRegistryReader.parseProcStart(raw),
+           let actual = processStart(pid), abs(actual.timeIntervalSince(expected)) > 2 { return nil }
+        // The id becomes part of a file path below.
+        guard let nativeId = object["sessionId"] as? String, ClaudeHookFold.isValidSessionId(nativeId) else { return nil }
         guard object["kind"] as? String == "interactive" else { return nil }
         guard let cwd = object["cwd"] as? String, !cwd.isEmpty else { return nil }
 

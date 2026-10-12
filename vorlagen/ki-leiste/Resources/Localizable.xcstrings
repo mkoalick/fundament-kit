@@ -1061,12 +1061,12 @@
         }
       }
     },
-    "Waiting: %d · Working: %d · Done: %d": {
+    "Waiting: %ld · Working: %ld · Done: %ld": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wartet: %d · Arbeitet: %d · Fertig: %d"
+            "value": "Wartet: %ld · Arbeitet: %ld · Fertig: %ld"
           }
         }
       }
@@ -1171,6 +1171,16 @@
         }
       }
     },
+    "ended": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "beendet"
+          }
+        }
+      }
+    },
     "macOS notifications for Needs You and Done": {
       "localizations": {
         "de": {
@@ -1267,6 +1277,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ergebnis"
+          }
+        }
+      }
+    },
+    "running": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "läuft"
           }
         }
       }

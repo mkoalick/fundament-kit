@@ -175,20 +175,24 @@ struct SessionRegister: Codable {
 }
 
 // ISO 8601 with or without fractional seconds; always written with them, in UTC.
-func parseDate(_ raw: String) -> Date? {
-    let fractional = ISO8601DateFormatter()
-    fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-    if let date = fractional.date(from: raw) { return date }
-    let plain = ISO8601DateFormatter()
-    plain.formatOptions = [.withInternetDateTime]
-    return plain.date(from: raw)
-}
-
-func formatDate(_ date: Date) -> String {
+// Creating a formatter is expensive (ICU), so there is one of each; ISO8601DateFormatter
+// is safe to use from several threads.
+private let fractionalFormatter: ISO8601DateFormatter = {
     let formatter = ISO8601DateFormatter()
     formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-    return formatter.string(from: date)
+    return formatter
+}()
+private let plainFormatter: ISO8601DateFormatter = {
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime]
+    return formatter
+}()
+
+func parseDate(_ raw: String) -> Date? {
+    fractionalFormatter.date(from: raw) ?? plainFormatter.date(from: raw)
 }
+
+func formatDate(_ date: Date) -> String { fractionalFormatter.string(from: date) }
 
 // Writes JSON through a temporary file and a rename, with private permissions.
 func writePrivately(_ data: Data, to url: URL) throws {
