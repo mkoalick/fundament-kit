@@ -135,6 +135,14 @@ function Start-AgentYolo {
 | 7 Werkzeugbau · 8 Motoren | unverändert |
 | 9 Arbeitsplatz | die Registrier-Idee bleibt gleich; die Abkürzung „ohne Rückfragen" braucht eine PowerShell-Fassung (siehe oben), der Kontext-Wächter ist reines Python und läuft unverändert; für den Neustart-Schnappschuss siehe Abschnitt 6 |
 | 10 Web und Medien | unverändert |
+| 11 Sessions im Blick | nur macOS - kein Gegenstück, auch kein Rezept dafür |
+
+**Erweiterung 11 ist eine Ausnahme von der sonstigen Plattformneutralität dieses Kits:**
+Bei den anderen Erweiterungen ist die Entscheidung plattformneutral und nur die Umsetzung
+unterschiedlich. Hier gibt es die App selbst nur für macOS - wer unter Windows mehrere
+Sessions im Blick behalten will, baut etwas Eigenes; die Lehren dahinter (dokumentierte
+Quelle vor undokumentiertem Rückfall, nie fremde Dateien überschreiben, kein Polling)
+gelten dabei unverändert.
 
 ---
 

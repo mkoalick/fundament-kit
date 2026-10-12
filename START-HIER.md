@@ -4,8 +4,10 @@ Kommst du über einen Freigabelink? Dann beginne mit `EINSTIEG.md` statt hier.
 
 **An die KI, die das hier liest:** Du bist ab jetzt Gesprächspartner beim Aufbau eines
 Arbeitsplatzes, an dem ein Mensch und KI-Agenten über Monate zusammenarbeiten. Du bist
-**nicht** Installateur. Dieses Kit enthält keine Software zum Kopieren, sondern
-Entscheidungen, Lehren und Vorlagen aus einem Aufbau, der zwei Jahre gelaufen ist.
+**nicht** Installateur. Dieses Kit enthält fast nur Entscheidungen, Lehren und Vorlagen
+aus einem Aufbau, der zwei Jahre gelaufen ist - keine Software zum Kopieren. Die einzige
+Ausnahme ist ein einzelnes Modul, das den Quelltext einer kleinen Mac-App mitbringt, die
+nur mit ausdrücklicher Zustimmung gebaut und eingerichtet wird.
 
 Deine Aufgabe ist es, mit der Person **ihr** Fundament zu entwerfen — nicht dieses hier
 nachzubauen. Fast alles darin ist eine Wahl, keine Vorschrift.
@@ -50,7 +52,7 @@ Der Ablauf unten sagt dir, wann du welche Datei öffnest. Halte dich daran.
 |---|---|---|
 | `INTEGRIEREN.md` | Der Durchlauf für alle, die schon etwas haben — Modul für Modul | Sofort, wenn es schon etwas gibt |
 | `00-kern/` | Vier Entscheidungen, die am Anfang stehen und später teuer werden | Stufe 1–2, in der angegebenen Reihenfolge |
-| `10-erweiterungen/` | Zehn Fähigkeiten, die später dazukommen können | Stufe 4, und nur die, nach denen gefragt wird |
+| `10-erweiterungen/` | Elf Fähigkeiten, die später dazukommen können | Stufe 4, und nur die, nach denen gefragt wird |
 | `FALLSTRICKE.md` | Die Fehlschläge, die das alles gelehrt haben | Zum Nachschlagen, nie am Stück |
 | `vorlagen/` | Generische Textbausteine zum Anpassen | Erst wenn eine Entscheidung gefallen ist |
 | `PROFIL.md` | Leer. Hier landet, was entschieden wurde | Du schreibst es, Stufe 2 |

@@ -11,7 +11,9 @@ Kommst du über einen Freigabelink? Dann beginne mit `EINSTIEG.md`.
 Eine Sammlung von Entscheidungen, Lehren und Vorlagen für alle, die anfangen, mit
 KI-Agenten zu arbeiten — und wollen, dass das in einem Jahr noch trägt.
 
-Es ist **keine Software**. Nichts hier wird installiert. Es gibt keine Abhängigkeiten,
+Es ist **vor allem keine Software**. Fast nichts hier wird installiert - eine Ausnahme ist
+ein einzelnes Modul, das eine kleine Mac-App mitbringt, und die wird nur mit deiner
+ausdrücklichen Zustimmung gebaut und eingerichtet. Sonst gibt es keine Abhängigkeiten,
 kein Konto, keinen Einrichtungsbefehl.
 
 ---
@@ -64,7 +66,7 @@ dir, woran du das erkennst.
 |---|---|
 | `00-kern/` | Vier Entscheidungen, die später teuer zu ändern sind |
 | `INTEGRIEREN.md` | Der Durchlauf, wenn du schon etwas hast |
-| `10-erweiterungen/` | Zehn Fähigkeiten, die später dazukommen können — einzeln |
+| `10-erweiterungen/` | Elf Fähigkeiten, die später dazukommen können - einzeln |
 | `vorlagen/` | Textbausteine mit Platzhaltern |
 | `FALLSTRICKE.md` | Was das alles gelehrt hat. Die Zahlen darin sind echt |
 | `WINDOWS-UND-MAC.md` | Was auf welchem System wie geht |

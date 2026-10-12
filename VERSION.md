@@ -1,10 +1,20 @@
 # Fassung
 
-**2026-09-27 · v1.2**
+**2026-10-12 · v1.3**
 
 ---
 
 ## Was neu ist
+
+**v1.3 - 2026-10-12** · Neue Erweiterung 11 (`10-erweiterungen/11-sessions-im-blick.md`,
+„Sessions im Blick behalten") - bringt den Quelltext einer kleinen Mac-App mit, der
+KI-Leiste: zeigt laufende Claude-Code- und Codex-Sessions als Chips in einer Leiste unter
+der Menüleiste, gestützt auf Claude Codes offizielle Hooks und einen abschaltbaren
+Rückfall. Bauen, Einrichten und das Eintragen der Hooks brauchen zwei getrennte
+Zustimmungen. Nur für macOS - `WINDOWS-UND-MAC.md` nennt das jetzt als Ausnahme von der
+sonstigen Plattformneutralität. `EINSTIEG.md`, `README.md` und `START-HIER.md` sagen jetzt
+ehrlich, dass dieses eine Modul eine App mitbringt, statt pauschal „keine Software" zu
+behaupten.
 
 **v1.2 — 2026-09-27** · Neue Datei `EINSTIEG.md` — der geführte Einstieg für alle, die über
 einen Freigabelink kommen: eine Frage, dann Schnellweg zu einem genannten Modul oder eine

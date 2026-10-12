@@ -9,8 +9,10 @@ gezielt dorthin schickt — nicht vorher, nicht auf Vorrat.
 
 ## Schritt 1 · Begrüßen und genau eine Frage stellen
 
-Begrüß kurz, sag in einem Satz, was das Kit ist — Lehren und Vorlagen für die Arbeit mit
-KI-Agenten, keine Software, nichts wird installiert — und frag dann **genau eines**:
+Begrüß kurz, sag in einem Satz, was das Kit ist - Lehren und Vorlagen für die Arbeit mit
+KI-Agenten; fast alles davon ist reiner Text, nur ein einzelnes Modul bringt eine kleine
+Mac-App mit, die nur mit ausdrücklicher Zustimmung gebaut und eingerichtet wird - und
+frag dann **genau eines**:
 
 > „Willst du kurz alles durchgehen, oder geht es dir um ein bestimmtes Thema?"
 
@@ -35,6 +37,7 @@ gleich in Schritt 2 als Grundlage:
 | Mehrere Modelle nutzen | `10-erweiterungen/08-mehrere-motoren.md` | Claude und Codex, Motorwahl |
 | Arbeitsplatz selbst regeln | `10-erweiterungen/09-arbeitsplatz.md` | Maschinenweite Einstellungen, Hooks, Aliase |
 | Web und Medien | `10-erweiterungen/10-web-und-medien.md` | Website, Bilder/Videos fürs Web |
+| Sessions im Blick behalten | `10-erweiterungen/11-sessions-im-blick.md` | Menüleiste, Session-Übersicht, welche Session wartet, KI-Leiste |
 
 Für ein gefundenes Modul gilt ab jetzt der Ablauf aus Schritt 3.
 
@@ -97,3 +100,6 @@ was sich in `VERSION.md` geändert hat, und du entscheidest, ob du es übernimms
   welche da sind.
 - **Nichts pushen, keine Marke setzen.** Was im Projekt der Person landet, committest du
   nur auf ihre Ansage, und dann in ihrem Repo — nie in `~/fundament-kit`.
+- **Beim Modul „Sessions im Blick behalten":** Bauen, Installieren und das Eintragen der
+  Hooks passieren erst nach ausdrücklicher Zustimmung - und das Eintragen der Hooks ist
+  eine eigene, zweite Zustimmung, getrennt vom Bauen und Einrichten der App.

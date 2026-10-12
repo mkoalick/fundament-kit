@@ -24,6 +24,7 @@ erste Schritt — **nachsehen, bevor du redest.***
 | 8 | **Mehrere Modelle nutzen** | Arbeit auf Kontingente und Stärken verteilen | Nr. 3 | Wenn ein Kontingent zum Engpass wird |
 | 9 | **Den Arbeitsplatz selbst regeln** | Maschinenweite Eingriffe nachvollziehbar halten | — | Beim dritten Eingriff |
 | 10 | **Web und Medien** | Seiten und Medien, gegen Schwellen geprüft | — | Nur wenn es zutrifft |
+| 11 | **Sessions im Blick behalten** | Sehen, welche Session wartet, ohne jedes Fenster zu öffnen | Mehrere parallele Sessions, macOS | Mehr als eine Session gleichzeitig, öfter als gelegentlich |
 
 ---
 
